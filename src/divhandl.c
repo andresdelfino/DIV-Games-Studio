@@ -1378,7 +1378,7 @@ void menu_system2(void) {
     switch (v.state) {
       case 1: show_cd_player(); break;
       case 2: show_clock(); break;
-      case 3: show_clipboard(); break;
+      case 3: show_trash(); break;
       case 4: calculator(); break;
       case 5: dialog(Vid_Setup0); break;
       case 6: dialog(Desktop_Setup0); break;

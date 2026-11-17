@@ -92,7 +92,7 @@ void Bin0(void)
 	v.name=texts[350];
 }
 
-void show_clipboard()
+void show_trash()
 {
   new_window(Bin0);
 }

@@ -15912,7 +15912,7 @@ This statement can only be put inside the following loops:
   {#1022,WHILE} {#1053,(} .. {#1053,)} ... {#1091,END}ú
   {#1025,FOR} {#1053,(} .. {#1068;} .. {#1068,;} .. {#1053,)} ... {#1091,END}ú
 
-A {BREAK} sentence will make the program continue its execution after the {#1091,END} or the {#1097,UNTIL} of the loop closer to the statement.
+A {BREAK} statement will make the program continue its execution after the {#1091,END} or the {#1097,UNTIL} of the loop closer to the statement.
 
 If there are several nested loops (one inside another one), the {BREAK} statement will only exit the inner loop.
 

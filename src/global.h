@@ -703,7 +703,7 @@ struct t_item {
 //GLOBAL_DATA 
 struct twindow {
   int type;                             // 0-none, 1-dialog, 2-menu, 3-palette
-                                        // 4-timer, 5-clipboard, 7-progress_bar
+                                        // 4-timer, 5-trash, 7-progress_bar
                                         // 8-mixer
                                         // 100-map (>=100 excludable objects)
                                         // 101-fpg 102-prg-gen_fnt-hlp 104-fnt
@@ -897,10 +897,10 @@ void Delete_Taggeds();
 void Show_Taggeds();
 
 //─────────────────────────────────────────────────────────────────────────────
-//      Functions and structures exported by the paper
+//      Functions and structures exported by the trash can (divbin.c)
 //─────────────────────────────────────────────────────────────────────────────
 
-void show_clipboard(); // trash shows (?)
+void show_trash(); // open the trash can window
 
 //─────────────────────────────────────────────────────────────────────────────
 //      Functions and structures exported by the (sound) recorder

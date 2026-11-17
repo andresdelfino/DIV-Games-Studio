@@ -476,7 +476,7 @@ char *Buffer;
         free(Buffer);
 }
 
-int Delete_FPG(FPG *Fpg,int CODE) // Clipboard, overwrite an existing one and when changing the code to one
+int Delete_FPG(FPG *Fpg,int CODE) // Trash, overwrite an existing one and when changing the code to one
 {
 struct rule_type CopyRules[16];
 HeadFPG MyOtherHeadFPG;

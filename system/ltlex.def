@@ -89,7 +89,7 @@
 &4Eneg                  ;Unary minus sign
 &4Fpointer              ;Indirection operator, unary
 
-&50offset               ;Unary shift
+&50offset               ;Unary offset
 &51! &51not             ;Unary logical negation
                                                                                §
 &52+                    ;Binary addition, used as unary it is ignored

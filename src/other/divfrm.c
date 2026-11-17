@@ -473,7 +473,7 @@ void analyze_ltlex(void);
 void lexer(void);
 void syntactic(void);
 void tglo_init(int);
-void sentence(void);
+void statement(void);
 void expression(void);
 int constant(void);
 
@@ -520,9 +520,9 @@ int start,final;     // Start and end addresses in mem[] of the statement
 int line1,column1;  // Position where the statement starts in the source
 int line2,column2;  // Position where the statement ends in the source
 
-void start_sentence(void);  // Set start, line1, column1
-void end_sentence(void);   // Set end, line2, column2
-void record_sentence(void);  // Save the six variables to the file
+void start_statement(void);  // Set start, line1, column1
+void end_statement(void);   // Set end, line2, column2
+void record_statement(void);  // Save the six variables to the file
 
 //═════════════════════════════════════════════════════════════════════════════
 
@@ -1067,7 +1067,7 @@ void c_error(word type, word e) {
 //  With the first token read, save the start of a statement
 //═════════════════════════════════════════════════════════════════════════════
 
-void start_sentence(void) {
+void start_statement(void) {
   byte * p=ierror-1;
   start=imem;
   line1=line_num;
@@ -1079,7 +1079,7 @@ void start_sentence(void) {
 //  With the first token that is not part of the statement, save the end of a statement
 //═════════════════════════════════════════════════════════════════════════════
 
-void end_sentence(void) {
+void end_statement(void) {
   byte * p=old_ierror_end-1;
   final=imem-1;
   line2=old_line;
@@ -1091,7 +1091,7 @@ void end_sentence(void) {
 //  Save a record (start,end,line1,...) to EXEC.LIN
 //═════════════════════════════════════════════════════════════════════════════
 
-void record_sentence(void) {
+void record_statement(void) {
   fwrite(&start,4,1,linf);
   fwrite(&final,4,1,linf);
   fwrite(&line1,4,1,linf);
@@ -2719,7 +2719,7 @@ void syntactic (void) {
   } else strcpy(cWork,"system\\EXEC.INS");
   if ((lins=fopen(cWork,"wb"))==NULL) c_error(0,0);
 
-  start_sentence(); lexer();
+  start_statement(); lexer();
   if (piece!=p_id) c_error(1,21);
   ob=o; if ((*ob).type!=tnone) c_error(0,115); (*ob).type=tproc;
   (*ob).proc.block=current_block=ob;
@@ -2727,7 +2727,7 @@ void syntactic (void) {
   lexer();
   if (!free_syntax) if (piece!=p_semicolon) c_error(3,66);
   while (piece==p_semicolon || piece==p_comma) lexer();
-  end_sentence();
+  end_statement();
 
   dlls[0].line1=line1;
   dlls[0].column1=column1;
@@ -2748,7 +2748,7 @@ void syntactic (void) {
   PrevOrder=0;
 
   while (piece==p_import) {
-    start_sentence();
+    start_statement();
     lexer();
     if (piece!=p_lit && !(piece==p_id && (*o).type==tcons && (*o).cons.literal)) c_error(1,62);
     old_source=source;
@@ -2775,7 +2775,7 @@ void syntactic (void) {
     source=old_source; lexer();
     if (!free_syntax) if (piece!=p_semicolon) c_error(3,66);
     while (piece==p_semicolon || piece==p_comma) lexer();
-    end_sentence();
+    end_statement();
 
     if (idlls<64) {
       dlls[idlls].line1=line1;
@@ -3376,7 +3376,7 @@ void syntactic (void) {
   line2=dlls[0].line2;
   column2=dlls[0].column2;
   start=0; final=imem-1;
-  record_sentence();
+  record_statement();
 
   if (piece==p_import) c_error(0,147); // Warn DIV 1 users
 
@@ -3389,7 +3389,7 @@ void syntactic (void) {
     column1=dlls[n].column1;
     line2=dlls[n].line2;
     column2=dlls[n].column2;
-    record_sentence();
+    record_statement();
   }
 
   // The first FRAME, and the loading of PRIVATE variables, are executed
@@ -3404,20 +3404,20 @@ void syntactic (void) {
   g2(lfrm,0);
 
   if (piece!=p_begin) c_error(0,29);
-  start_sentence(); start=final;
-  lexer(); end_sentence(); record_sentence();
+  start_statement(); start=final;
+  lexer(); end_statement(); record_statement();
 
   #ifdef format
   crlf(); tabu++;
   #endif
-  sentence();
+  statement();
   #ifdef format
   tabu--;
   #endif
 
-  if (piece!=p_end) c_error(0,40); start_sentence();
+  if (piece!=p_end) c_error(0,40); start_statement();
   g2(lret,(*current_block).proc.num_params);
-  skip_semicolon(); end_sentence(); record_sentence();
+  skip_semicolon(); end_statement(); record_statement();
 
   #ifdef format
   crlf();
@@ -3432,7 +3432,7 @@ void syntactic (void) {
 
   save_error(0);
   while (piece==p_process || piece==p_function) {
-    n=piece; start_sentence(); lexer();
+    n=piece; start_statement(); lexer();
     if (piece!=p_id) c_error(1,111); ob=o; lexer();
     if ((*ob).type==tproc && (*ob).used) {
       num_params=(*ob).proc.num_params; lexical_block=current_block=ob;
@@ -3458,7 +3458,7 @@ void syntactic (void) {
     } if ((*ob).used)
       if (num_params==(*ob).proc.num_params) (*ob).used=0; else c_error(0,46);
 
-    skip_semicolon(); end_sentence();
+    skip_semicolon(); end_statement();
     #ifdef format
     crlf2();
     crlf();
@@ -3480,14 +3480,14 @@ void syntactic (void) {
     #ifdef format
     crlf(); tabu++;
     #endif
-    final=imem-1; record_sentence();
-    sentence();
+    final=imem-1; record_statement();
+    statement();
     #ifdef format
     tabu--;
     #endif
-    if (piece!=p_end) c_error(0,40); start_sentence();
+    if (piece!=p_end) c_error(0,40); start_statement();
     g2(lret,num_params);
-    skip_semicolon(); end_sentence(); record_sentence();
+    skip_semicolon(); end_statement(); record_statement();
     #ifdef format
     crlf();
     crlf();
@@ -4117,7 +4117,7 @@ void tglo_init2(int type) {
 //      Analysis of a block of statements;
 //═════════════════════════════════════════════════════════════════════════════
 
-void sentence() {
+void statement() {
 
   int im1,im2,im3,im4;
   int dir,from,to,step;
@@ -4126,7 +4126,7 @@ void sentence() {
     test_buffer(&mem,&imem_max,imem);
     switch (piece) {
       case p_return:
-        start_sentence();
+        start_statement();
         lexer(); if (piece==p_lparen) {
           lexer(); if (piece!=p_rparen) {
             expression(); if (piece!=p_rparen) c_error(3,25);
@@ -4145,9 +4145,9 @@ void sentence() {
         #ifdef format
         crlf2();
         #endif
-        end_sentence(); record_sentence(); break;
+        end_statement(); record_statement(); break;
       case p_if:
-        start_sentence();
+        start_statement();
         lexer();
         if (!free_syntax) if (piece!=p_lparen) c_error(3,36);
         if (piece==p_lparen) lexer();
@@ -4158,20 +4158,20 @@ void sentence() {
         #ifdef format
         crlf(); tabu++;
         #endif
-        end_sentence(); record_sentence();
-        sentence();
+        end_statement(); record_statement();
+        statement();
         #ifdef format
         tabu--;
         #endif
         if (piece==p_else) {
-          start_sentence();
+          start_statement();
           lexer();
           #ifdef format
           tabu++; crlf();
           #endif
           g2(ljmp,0); mem[im1]=imem; im1=imem-1;
-          end_sentence(); record_sentence();
-          sentence();
+          end_statement(); record_statement();
+          statement();
           #ifdef format
           tabu--;
           #endif
@@ -4188,22 +4188,22 @@ void sentence() {
         crlf();
         tabu++;
         #endif
-        im1=imem; sentence();
+        im1=imem; statement();
         #ifdef format
         tabu--;
         #endif
         if (piece!=p_end) c_error(0,40);
-        start_sentence(); lexer();
+        start_statement(); lexer();
         #ifdef format
         crlf();
         #endif
         g2(ljmp,im1);
         while (tbreak[--itbreak]!=0) mem[tbreak[itbreak]]=imem;
         while (tcont[--itcont]!=0) mem[tcont[itcont]]=im1;
-        end_sentence(); record_sentence();
+        end_statement(); record_statement();
         break;
       case p_while:
-        start_sentence();
+        start_statement();
         tbreak[itbreak++]=0; tcont[itcont++]=0; im1=imem;
         lexer();
         if (!free_syntax) if (piece!=p_lparen) c_error(3,36);
@@ -4212,15 +4212,15 @@ void sentence() {
         if (!free_syntax) if (piece!=p_rparen) c_error(3,25);
         if (piece==p_rparen) lexer();
         g2(ljpf,0); im2=imem-1;
-        end_sentence(); record_sentence();
+        end_statement(); record_statement();
         #ifdef format
         crlf(); tabu++;
         #endif
-        sentence();
+        statement();
         #ifdef format
         tabu--;
         #endif
-        if (piece!=p_end) c_error(0,40); start_sentence();
+        if (piece!=p_end) c_error(0,40); start_statement();
         lexer();
         #ifdef format
         crlf();
@@ -4228,7 +4228,7 @@ void sentence() {
         g2(ljmp,im1); mem[im2]=imem;
         while (tbreak[--itbreak]!=0) mem[tbreak[itbreak]]=imem;
         while (tcont[--itcont]!=0) mem[tcont[itcont]]=im1;
-        end_sentence(); record_sentence();
+        end_statement(); record_statement();
         break;
       case p_repeat:
         tbreak[itbreak++]=0; tcont[itcont++]=0;
@@ -4236,12 +4236,12 @@ void sentence() {
         #ifdef format
         tabu++; crlf();
         #endif
-        im1=imem; sentence();
+        im1=imem; statement();
         #ifdef format
         tabu--;
         #endif
         if (piece!=p_until) c_error(0,42);
-        start_sentence();
+        start_statement();
         lexer();
         if (!free_syntax) if (piece!=p_lparen) c_error(3,36);
         if (piece==p_lparen) lexer();
@@ -4254,10 +4254,10 @@ void sentence() {
         g2(ljpf,im1);
         while (tbreak[--itbreak]!=0) mem[tbreak[itbreak]]=imem;
         while (tcont[--itcont]!=0) mem[tcont[itcont]]=im1;
-        end_sentence(); record_sentence();
+        end_statement(); record_statement();
         break;
       case p_from:
-        start_sentence();
+        start_statement();
         tbreak[itbreak++]=0; tcont[itcont++]=0;
         lexer();
         if (piece!=p_id) c_error(0,67);
@@ -4297,12 +4297,12 @@ void sentence() {
         if (step>0) g1(lmei); else g1(lmai);
         g2(ljpf,0); im2=imem-1;
 
-        end_sentence(); record_sentence();
+        end_statement(); record_statement();
         if (!free_syntax) if (piece!=p_semicolon) c_error(3,66);
         while (piece==p_semicolon || piece==p_comma) lexer();
 
-        sentence();
-        if (piece!=p_end) c_error(0,40); start_sentence();
+        statement();
+        if (piece!=p_end) c_error(0,40); start_statement();
         lexer();
 
         im3=imem; // Position of the continue
@@ -4318,12 +4318,12 @@ void sentence() {
 
         while (tbreak[--itbreak]!=0) mem[tbreak[itbreak]]=imem;
         while (tcont[--itcont]!=0) mem[tcont[itcont]]=im3;
-        end_sentence(); record_sentence();
+        end_statement(); record_statement();
 
         break;
 
       case p_for:
-        start_sentence();
+        start_statement();
         tbreak[itbreak++]=0; tcont[itcont++]=0;
         lexer();
         #ifdef format
@@ -4349,15 +4349,15 @@ void sentence() {
         }
         g2(ljmp,im1);
         if (piece!=p_rparen) c_error(3,25); lexer();
-        end_sentence(); record_sentence();
+        end_statement(); record_statement();
         #ifdef format
         tabu++; crlf();
         #endif
-        mem[im3++]=imem; sentence();
+        mem[im3++]=imem; statement();
         #ifdef format
         tabu--;
         #endif
-        if (piece!=p_end) c_error(0,40); start_sentence(); lexer();
+        if (piece!=p_end) c_error(0,40); start_statement(); lexer();
         #ifdef format
         crlf();
         #endif
@@ -4365,10 +4365,10 @@ void sentence() {
           do { im1=mem[im2]; mem[im2]=imem; im2=im1; } while(im2);
         while (tbreak[--itbreak]!=0) mem[tbreak[itbreak]]=imem;
           while (tcont[--itcont]!=0) mem[tcont[itcont]]=im3;
-        end_sentence(); record_sentence();
+        end_statement(); record_statement();
         break;
       case p_switch:
-        start_sentence();
+        start_statement();
         lexer();
         if (!free_syntax) if (piece!=p_lparen) c_error(3,36);
         if (piece==p_lparen) lexer();
@@ -4381,13 +4381,13 @@ void sentence() {
           #endif
           lexer();
         }
-        end_sentence(); record_sentence();
+        end_statement(); record_statement();
         #ifdef format
         crlf2(); tabu++;
         #endif
         im1=0; im2=0;
         while (piece!=p_end) {
-          start_sentence();
+          start_statement();
           if (piece==p_case) {
             im3=0; do {
 
@@ -4419,9 +4419,9 @@ void sentence() {
           emit_token(":");
           crlf(); tabu++;
           #endif
-          end_sentence(); record_sentence();
-          sentence();
-          if (piece!=p_end) c_error(0,51); start_sentence();
+          end_statement(); record_statement();
+          statement();
+          if (piece!=p_end) c_error(0,51); start_statement();
             g2(ljmp,im2); im2=imem-1;
           #ifdef format
           tabu--;
@@ -4430,8 +4430,8 @@ void sentence() {
           #ifdef format
           crlf();
           #endif
-          end_sentence(); record_sentence();
-        } start_sentence();
+          end_statement(); record_statement();
+        } start_statement();
         if (im1) mem[im1]=imem; g1(lasp);
         while(im2) { im1=mem[im2]; mem[im2]=imem; im2=im1; }
         #ifdef format
@@ -4441,9 +4441,9 @@ void sentence() {
         #ifdef format
         crlf();
         #endif
-        end_sentence(); record_sentence(); break;
+        end_statement(); record_statement(); break;
       case p_frame:
-        start_sentence();
+        start_statement();
         lexer(); if (piece==p_lparen) {
           lexer(); if (piece!=p_rparen) {
             expression(); if (piece!=p_rparen) c_error(3,25);
@@ -4459,19 +4459,19 @@ void sentence() {
         #ifdef format
         crlf2();
         #endif
-        end_sentence(); record_sentence(); break;
+        end_statement(); record_statement(); break;
       case p_debug:
-        start_sentence();
+        start_statement();
         g1(ldbg); lexer();
         if (!free_syntax) if (piece!=p_semicolon) c_error(3,66);
         while (piece==p_semicolon || piece==p_comma) lexer();
         #ifdef format
         crlf2();
         #endif
-        end_sentence(); record_sentence();
+        end_statement(); record_statement();
         break;
       case p_break:
-        start_sentence();
+        start_statement();
         if (itbreak==0) c_error(0,48); lexer();
         if (!free_syntax) if (piece!=p_semicolon) c_error(3,66);
         while (piece==p_semicolon || piece==p_comma) lexer();
@@ -4479,9 +4479,9 @@ void sentence() {
         #ifdef format
         crlf2();
         #endif
-        end_sentence(); record_sentence(); break;
+        end_statement(); record_statement(); break;
       case p_continue:
-        start_sentence();
+        start_statement();
         if (itcont==0) c_error(0,49); lexer();
         if (!free_syntax) if (piece!=p_semicolon) c_error(3,66);
         while (piece==p_semicolon || piece==p_comma) lexer();
@@ -4489,15 +4489,15 @@ void sentence() {
         #ifdef format
         crlf2();
         #endif
-        end_sentence(); record_sentence(); break;
+        end_statement(); record_statement(); break;
       case p_clone:
-        start_sentence();
+        start_statement();
         lexer(); g2(lclo,0); im1=imem-1;
         #ifdef format
         crlf(); tabu++;
         #endif
-        end_sentence(); record_sentence();
-        sentence();
+        end_statement(); record_statement();
+        statement();
         #ifdef format
         tabu--;
         #endif
@@ -4512,7 +4512,7 @@ void sentence() {
         #endif
         lexer(); break;
       default:
-        start_sentence();
+        start_statement();
         error_27=124;
         expression();
         do {
@@ -4551,7 +4551,7 @@ void sentence() {
         #ifdef format
         crlf2();
         #endif
-        end_sentence(); record_sentence();
+        end_statement(); record_statement();
         break;
     }
   }

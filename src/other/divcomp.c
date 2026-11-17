@@ -690,7 +690,7 @@ void analyze_ltlex(void);
 void lexer(void);
 void syntactic(void);
 void tglo_init(memptrsize);
-void sentence(void);
+void statement(void);
 void expression(void);
 int constant(void);
 
@@ -762,9 +762,9 @@ int start,final;     // Start and end addresses in mem[] of the statement
 int line1,column1;  // Position where the statement starts in the source
 int line2,column2;  // Position where the statement ends in the source
 
-void start_sentence(void);  // Set start, line1, column1
-void end_sentence(void);   // Set end, line2, column2
-void record_sentence(void);  // Save the six variables to the file
+void start_statement(void);  // Set start, line1, column1
+void end_statement(void);   // Set end, line2, column2
+void record_statement(void);  // Save the six variables to the file
 
 //├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì├ì
 
@@ -5081,7 +5081,7 @@ void syntactic (void) {
   } else strcpy((char *)cWork,"system/exec.ins");
   if ((lins=fopen((char *)cWork,"wb"))==NULL) c_error(0,0);
 
-  start_sentence(); lexer();
+  start_statement(); lexer();
   if (piece!=p_id) c_error(1,21);
   ob=o; if ((*ob).type!=tnone) c_error(0,115); (*ob).type=tproc;
   (*ob).proc.block=current_block=ob;
@@ -5089,7 +5089,7 @@ void syntactic (void) {
   lexer();
   if (!free_syntax) if (piece!=p_semicolon) c_error(3,66);
   while (piece==p_semicolon || piece==p_comma) lexer();
-  end_sentence();
+  end_statement();
 
   dlls[0].line1=line1;
   dlls[0].column1=column1;
@@ -5106,7 +5106,7 @@ void syntactic (void) {
   PrevOrder=0;
 
   while (piece==p_import) {
-    start_sentence();
+    start_statement();
     lexer();
     if (piece!=p_lit && !(piece==p_id && (*o).type==tcons && (*o).cons.literal)) c_error(1,62);
     old_source=source;
@@ -5136,7 +5136,7 @@ printf("DLL: %s\n",dll_name);
     source=old_source; lexer();
     if (!free_syntax) if (piece!=p_semicolon) c_error(3,66);
     while (piece==p_semicolon || piece==p_comma) lexer();
-    end_sentence();
+    end_statement();
 
     if (idlls<64) {
       dlls[idlls].line1=line1;
@@ -5900,7 +5900,7 @@ printf("DLL: %s\n",dll_name);
   line2=dlls[0].line2;
   column2=dlls[0].column2;
   start=0; final=imem-1;
-  record_sentence();
+  record_statement();
 
   if (piece==p_import) c_error(0,147); // Warn DIV 1 users
 
@@ -5913,7 +5913,7 @@ printf("DLL: %s\n",dll_name);
     column1=dlls[n].column1;
     line2=dlls[n].line2;
     column2=dlls[n].column2;
-    record_sentence();
+    record_statement();
   }
 
   // The first FRAME, and the loading of PRIVATE variables, are executed
@@ -5930,14 +5930,14 @@ printf("DLL: %s\n",dll_name);
   g1(lfrm);
 
   if (piece!=p_begin) c_error(0,29);
-  start_sentence(); start=final;
-  lexer(); end_sentence(); record_sentence();
+  start_statement(); start=final;
+  lexer(); end_statement(); record_statement();
 
-  sentence();
+  statement();
 
-  if (piece!=p_end) c_error(0,40); start_sentence();
+  if (piece!=p_end) c_error(0,40); start_statement();
   g1(lret);
-  skip_semicolon(); end_sentence(); record_sentence();
+  skip_semicolon(); end_statement(); record_statement();
 
   //├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä├ä
   // Processes
@@ -5947,7 +5947,7 @@ printf("DLL: %s\n",dll_name);
 
   save_error(0);
   while (piece==p_process || piece==p_function) {
-    n=piece; start_sentence(); lexer();
+    n=piece; start_statement(); lexer();
     if (piece!=p_id) c_error(1,111); ob=o; lexer();
     if ((*ob).type==tproc && (*ob).used) {
       num_params=(*ob).proc.num_params; lexical_block=current_block=ob;
@@ -5973,7 +5973,7 @@ printf("DLL: %s\n",dll_name);
     } if ((*ob).used)
       if (num_params==(*ob).proc.num_params) (*ob).used=0; else c_error(0,46);
 
-    skip_semicolon(); end_sentence();
+    skip_semicolon(); end_statement();
 
     if (parameters>1) {
       g2(lpar,parameters-1);
@@ -5988,11 +5988,11 @@ printf("DLL: %s\n",dll_name);
     if (iloc>iloc_len) iloc_len=iloc; iloc=n;
 
     if (piece!=p_begin) c_error(0,29); lexer();
-    final=imem-1; record_sentence();
-    sentence();
-    if (piece!=p_end) c_error(0,40); start_sentence();
+    final=imem-1; record_statement();
+    statement();
+    if (piece!=p_end) c_error(0,40); start_statement();
     g1(lret);
-    skip_semicolon(); end_sentence(); record_sentence();
+    skip_semicolon(); end_statement(); record_statement();
 
     save_error(0);
   }
@@ -6646,7 +6646,7 @@ byte * next_lexer(byte * _source, int comment, int line_num) { // It never gener
   next_line=line_num;
   return(_source);
 }
-void sentence() {
+void statement() {
 
   int im1,im2,im3,im4;
   int dir,from,to,step;
@@ -6655,7 +6655,7 @@ void sentence() {
     test_buffer(&mem,&imem_max,imem);
     switch (piece) {
       case p_return:
-        start_sentence();
+        start_statement();
         lexer(); if (piece==p_lparen) {
           lexer(); if (piece!=p_rparen) {
             expression(); if (piece!=p_rparen) c_error(3,25);
@@ -6668,9 +6668,9 @@ void sentence() {
         }
         if (!free_syntax) if (piece!=p_semicolon) c_error(3,66);
         while (piece==p_semicolon || piece==p_comma) lexer();
-        end_sentence(); record_sentence(); break;
+        end_statement(); record_statement(); break;
       case p_if:
-        start_sentence();
+        start_statement();
         lexer();
         if (!free_syntax) if (piece!=p_lparen) c_error(3,36);
         if (piece==p_lparen) lexer();
@@ -6678,30 +6678,30 @@ void sentence() {
         if (!free_syntax) if (piece!=p_rparen) c_error(3,25);
         if (piece==p_rparen) lexer();
         g2(ljpf,0); im1=imem-1;
-        end_sentence(); record_sentence();
-        sentence();
+        end_statement(); record_statement();
+        statement();
         if (piece==p_else) {
-          start_sentence();
+          start_statement();
           lexer();
           g2(ljmp,0); mem[im1]=imem; im1=imem-1;
-          end_sentence(); record_sentence();
-          sentence();
+          end_statement(); record_statement();
+          statement();
           }
         mem[im1]=imem; if (piece!=p_end) c_error(0,40); lexer();
         break;
       case p_loop:
         tbreak[itbreak++]=0; tcont[itcont++]=0;
         lexer();
-        im1=imem; sentence();
+        im1=imem; statement();
         if (piece!=p_end) c_error(0,40);
-        start_sentence(); lexer();
+        start_statement(); lexer();
         g2(ljmp,im1);
         while (tbreak[--itbreak]!=0) mem[tbreak[itbreak]]=imem;
         while (tcont[--itcont]!=0) mem[tcont[itcont]]=im1;
-        end_sentence(); record_sentence();
+        end_statement(); record_statement();
         break;
       case p_while:
-        start_sentence();
+        start_statement();
         tbreak[itbreak++]=0; tcont[itcont++]=0; im1=imem;
         lexer();
         if (!free_syntax) if (piece!=p_lparen) c_error(3,36);
@@ -6710,21 +6710,21 @@ void sentence() {
         if (!free_syntax) if (piece!=p_rparen) c_error(3,25);
         if (piece==p_rparen) lexer();
         g2(ljpf,0); im2=imem-1;
-        end_sentence(); record_sentence();
-        sentence();
-        if (piece!=p_end) c_error(0,40); start_sentence();
+        end_statement(); record_statement();
+        statement();
+        if (piece!=p_end) c_error(0,40); start_statement();
         lexer();
         g2(ljmp,im1); mem[im2]=imem;
         while (tbreak[--itbreak]!=0) mem[tbreak[itbreak]]=imem;
         while (tcont[--itcont]!=0) mem[tcont[itcont]]=im1;
-        end_sentence(); record_sentence();
+        end_statement(); record_statement();
         break;
       case p_repeat:
         tbreak[itbreak++]=0; tcont[itcont++]=0;
         lexer();
-        im1=imem; sentence();
+        im1=imem; statement();
         if (piece!=p_until) c_error(0,42);
-        start_sentence();
+        start_statement();
         lexer();
         if (!free_syntax) if (piece!=p_lparen) c_error(3,36);
         if (piece==p_lparen) lexer();
@@ -6734,10 +6734,10 @@ void sentence() {
         g2(ljpf,im1);
         while (tbreak[--itbreak]!=0) mem[tbreak[itbreak]]=imem;
         while (tcont[--itcont]!=0) mem[tcont[itcont]]=im1;
-        end_sentence(); record_sentence();
+        end_statement(); record_statement();
         break;
       case p_from:
-        start_sentence();
+        start_statement();
         tbreak[itbreak++]=0; tcont[itcont++]=0;
         lexer();
         if (piece!=p_id) c_error(0,67);
@@ -6777,12 +6777,12 @@ void sentence() {
         if (step>0) g1(lmei); else g1(lmai);
         g2(ljpf,0); im2=imem-1;
 
-        end_sentence(); record_sentence();
+        end_statement(); record_statement();
         if (!free_syntax) if (piece!=p_semicolon) c_error(3,66);
         while (piece==p_semicolon || piece==p_comma) lexer();
 
-        sentence();
-        if (piece!=p_end) c_error(0,40); start_sentence();
+        statement();
+        if (piece!=p_end) c_error(0,40); start_statement();
         lexer();
 
         im3=imem; // Position of the continue
@@ -6798,12 +6798,12 @@ void sentence() {
 
         while (tbreak[--itbreak]!=0) mem[tbreak[itbreak]]=imem;
         while (tcont[--itcont]!=0) mem[tcont[itcont]]=im3;
-        end_sentence(); record_sentence();
+        end_statement(); record_statement();
 
         break;
 
       case p_for:
-        start_sentence();
+        start_statement();
         tbreak[itbreak++]=0; tcont[itcont++]=0;
         lexer();
         if (piece!=p_lparen) c_error(3,36); lexer();
@@ -6826,17 +6826,17 @@ void sentence() {
         }
         g2(ljmp,im1);
         if (piece!=p_rparen) c_error(3,25); lexer();
-        end_sentence(); record_sentence();
-        mem[im3++]=imem; sentence();
-        if (piece!=p_end) c_error(0,40); start_sentence(); lexer();
+        end_statement(); record_statement();
+        mem[im3++]=imem; statement();
+        if (piece!=p_end) c_error(0,40); start_statement(); lexer();
           g2(ljmp,im3);
           do { im1=mem[im2]; mem[im2]=imem; im2=im1; } while(im2);
         while (tbreak[--itbreak]!=0) mem[tbreak[itbreak]]=imem;
           while (tcont[--itcont]!=0) mem[tcont[itcont]]=im3;
-        end_sentence(); record_sentence();
+        end_statement(); record_statement();
         break;
       case p_switch:
-        start_sentence();
+        start_statement();
         lexer();
         if (!free_syntax) if (piece!=p_lparen) c_error(3,36);
         if (piece==p_lparen) lexer();
@@ -6846,10 +6846,10 @@ void sentence() {
         while (piece==p_semicolon) {
           lexer();
         }
-        end_sentence(); record_sentence();
+        end_statement(); record_statement();
         im1=0; im2=0;
         while (piece!=p_end) {
-          start_sentence();
+          start_statement();
           if (piece==p_case) {
             im3=0; do {
 
@@ -6877,19 +6877,19 @@ void sentence() {
           if (!free_syntax) if (piece!=p_semicolon) c_error(3,65);
           while (piece==p_semicolon || piece==p_comma) lexer();
           g1(lasp);
-          end_sentence(); record_sentence();
-          sentence();
-          if (piece!=p_end) c_error(0,51); start_sentence();
+          end_statement(); record_statement();
+          statement();
+          if (piece!=p_end) c_error(0,51); start_statement();
             g2(ljmp,im2); im2=imem-1;
           skip_semicolon();
-          end_sentence(); record_sentence();
-        } start_sentence();
+          end_statement(); record_statement();
+        } start_statement();
         if (im1) mem[im1]=imem; g1(lasp);
         while(im2) { im1=mem[im2]; mem[im2]=imem; im2=im1; }
         lexer();
-        end_sentence(); record_sentence(); break;
+        end_statement(); record_statement(); break;
       case p_frame:
-        start_sentence();
+        start_statement();
         lexer(); if (piece==p_lparen) {
           lexer(); if (piece!=p_rparen) {
             expression(); if (piece!=p_rparen) c_error(3,25);
@@ -6902,39 +6902,39 @@ void sentence() {
         }
         if (!free_syntax) if (piece!=p_semicolon) c_error(3,66);
         while (piece==p_semicolon || piece==p_comma) lexer();
-        end_sentence(); record_sentence(); break;
+        end_statement(); record_statement(); break;
       case p_debug:
-        start_sentence();
+        start_statement();
         g1(ldbg); lexer();
         if (!free_syntax) if (piece!=p_semicolon) c_error(3,66);
         while (piece==p_semicolon || piece==p_comma) lexer();
-        end_sentence(); record_sentence();
+        end_statement(); record_statement();
         break;
       case p_break:
-        start_sentence();
+        start_statement();
         if (itbreak==0) c_error(0,48); lexer();
         if (!free_syntax) if (piece!=p_semicolon) c_error(3,66);
         while (piece==p_semicolon || piece==p_comma) lexer();
         g2(ljmp,0); tbreak[itbreak++]=imem-1;
-        end_sentence(); record_sentence(); break;
+        end_statement(); record_statement(); break;
       case p_continue:
-        start_sentence();
+        start_statement();
         if (itcont==0) c_error(0,49); lexer();
         if (!free_syntax) if (piece!=p_semicolon) c_error(3,66);
         while (piece==p_semicolon || piece==p_comma) lexer();
         g2(ljmp,0); tcont[itcont++]=imem-1;
-        end_sentence(); record_sentence(); break;
+        end_statement(); record_statement(); break;
       case p_clone:
-        start_sentence();
+        start_statement();
         lexer(); g2(lclo,0); im1=imem-1;
-        end_sentence(); record_sentence();
-        sentence();
+        end_statement(); record_statement();
+        statement();
         if (piece!=p_end) c_error(0,40); lexer();
         mem[im1]=imem; break;
       case p_semicolon:
         lexer(); break;
       default:
-        start_sentence();
+        start_statement();
         error_27=124;
         expression();
         do {
@@ -6970,13 +6970,13 @@ void sentence() {
         if (!free_syntax) if (piece!=p_semicolon) c_error(3,66);
         while (piece==p_semicolon || piece==p_comma) lexer();
         g1(lasp);
-        end_sentence(); record_sentence();
+        end_statement(); record_statement();
         break;
     }
   }
 }
 
-void start_sentence(void) {
+void start_statement(void) {
   byte * p=ierror-1;
   start=imem;
   line1=line_num;
@@ -6984,7 +6984,7 @@ void start_sentence(void) {
   while (*p!=cr && *p!=lf && p>_source) { column1++; p--; }
 }
 
-void end_sentence(void) {
+void end_statement(void) {
   byte * p=old_ierror_end-1;
   final=imem-1;
   line2=old_line;
@@ -7436,7 +7436,7 @@ void save_error(word type) { // Save an error position (from 0 .. 3)
   } _t=type;
 }
 
-void record_sentence(void) {
+void record_statement(void) {
   fwrite(&start,4,1,linf);
   fwrite(&final,4,1,linf);
   fwrite(&line1,4,1,linf);

@@ -127,8 +127,8 @@ static int superget = 0;
 static int line0;    // First line nunmber in the debugger window
 static byte *pline0; // Pointer to first line in debugger window
 
-static int mem1, mem2;                         // Current sentence span in mem[] vector
-static int line1, column1, line2, column2; // Current sentence span
+static int mem1, mem2;                         // Current statement span in mem[] vector
+static int line1, column1, line2, column2; // Current statement span
 
 static int line_sel; // Selected line number
 
@@ -159,7 +159,7 @@ static void debug0(void);
 static byte *source = NULL, *end_source = NULL;
 
 static int *line = NULL;
-static int num_sentences;
+static int num_statements;
 
 //════════════════════════════════════════════════════════════════════════════
 //     Debugger variables
@@ -307,7 +307,7 @@ void init_debug(void) {
 			fseek(f, 0, SEEK_SET);
 			fread(line, 1, n, f);
 			fclose(f);
-			num_sentences = n / (6 * 4);
+			num_statements = n / (6 * 4);
 		} else {
 			fclose(f);
 			exer(1);
@@ -2734,7 +2734,7 @@ void e(int texts) {
 }
 
 //═════════════════════════════════════════════════════════════════════════════
-//      DEBUG sentence dialog box
+//      DEBUG statement dialog box
 //═════════════════════════════════════════════════════════════════════════════
 
 static void deb1(void) {
@@ -5005,7 +5005,7 @@ static void debug2(void) {
 
 			for (iip = mem1; iip < mem2; iip++) {
 
-				// BEWARE! To know if next sentence calls a function, we search for a "call"
+				// BEWARE! To know if next statement calls a function, we search for a "call"
 				// This is a tad imprecise, as a 'cal' is a 26, and there could be constant
 				// data with that same value
 
@@ -5195,9 +5195,9 @@ static void debug0(void) {
 static void get_line(int n) { // Get line number from IP (instruction pointer) address
 	int x = 0;
 	if (line == NULL) return;
-	for (x = 0; x < num_sentences; x++)
+	for (x = 0; x < num_statements; x++)
 		if (n >= line[x * 6] && n <= line[x * 6 + 1]) break;
-	if (x < num_sentences) {
+	if (x < num_statements) {
 		mem1 = line[x * 6];
 		mem2 = line[x * 6 + 1];
 		line1 = line[x * 6 + 2] - 1;
@@ -5217,9 +5217,9 @@ static void get_line(int n) { // Get line number from IP (instruction pointer) a
 static int get_ip(int n) { // Get IP address from line number
 	int x = 0;
 	if (line == NULL) return (0);
-	for (x = 0; x < num_sentences; x++)
+	for (x = 0; x < num_statements; x++)
 		if (n == line[x * 6 + 2] - 1) break;
-	if (x < num_sentences)
+	if (x < num_statements)
 		return (line[x * 6]);
 	else
 		return (-1);

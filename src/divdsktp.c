@@ -120,7 +120,7 @@ void New_DownLoad_Desktop() {
               if(window[x].paint_handler==Clock1) iWork=1;
               n+=fwrite(&iWork,1,4,desktop);
               break;
-      case    5: //clipboard
+      case    5: //trash
               break;
       case    100: //map
               // tmapinfo structure
@@ -291,9 +291,9 @@ fflush(lst);
                                             fprintf(lst,"  cdiv\n");
 #endif
                                         break;
-                                case    5: //clipboard
+                                case    5: //trash
 #ifdef SLST
-                                        fprintf(lst,"  clipboard\n");
+                                        fprintf(lst,"  trash\n");
 #endif
                                         break;
                                 case    8: //mixer
@@ -540,7 +540,7 @@ int UpLoad_Desktop()
                                 if(!Interpreting)
                                         update_box(0,0,vga_width,vga_height);
                                 break;
-                        case    5: //clipboard
+                        case    5: //trash
                                 new_window_load(Bin0,window_aux.x,window_aux.y);
                                 if(!Interpreting)
                                         update_box(0,0,vga_width,vga_height);
